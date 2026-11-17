@@ -7,15 +7,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const DEFAULT_URL = 'https://buildferry.app';
 const SKIP_DIRS = new Set(['node_modules', '.git', 'Pods', '.build', '.gradle', '.dart_tool', 'vendor']);
-const HELP = `Upload an iOS build to BuildFerry. Testers' iPhones get it automatically.
+const HELP = `Upload a build to BuildFerry. Testers get it automatically on the same links.
 
 Usage
-  npx buildferry upload [path/to/App.ipa] [options]
+  npx buildferry upload [path/to/App.ipa | path/to/app.apk] [options]
 
-With no path, the newest .ipa under the current folder is used.
+With no path, the newest .ipa under the current folder is used. Pass an .apk's path
+to upload an Android build: it joins the app with the same package name.
 
 Options
   --token <token>   API token (default: the BUILDFERRY_TOKEN environment variable)
@@ -134,11 +135,12 @@ function progress(opts) {
 
 async function upload(opts) {
   if (!opts.token) throw new Failure(`No API token. Create one at ${opts.url}/ci, then set BUILDFERRY_TOKEN or pass --token.`);
-  if (opts.files.length > 1) throw new Failure('Upload one .ipa at a time.');
+  if (opts.files.length > 1) throw new Failure('Upload one build at a time.');
   const file = opts.files[0] ?? findIpa(process.cwd());
   if (!file) throw new Failure('No .ipa found under this folder. Pass its path: buildferry upload path/to/App.ipa');
   if (!fs.existsSync(file)) throw new Failure(`${file} does not exist.`);
-  if (!file.toLowerCase().endsWith('.ipa')) throw new Failure(`${file} is not an .ipa file.`);
+  if (file.toLowerCase().endsWith('.aab')) throw new Failure(`${file} is an Android App Bundle, which phones can't install directly. Upload an .apk (bundletool build-apks --mode=universal, or ./gradlew assembleRelease).`);
+  if (!/\.(ipa|apk)$/i.test(file)) throw new Failure(`${file} is not an .ipa or .apk file.`);
   if (opts.notesFile && !fs.existsSync(opts.notesFile)) throw new Failure(`${opts.notesFile} does not exist.`);
   const notes = (opts.notesFile ? fs.readFileSync(opts.notesFile, 'utf8') : opts.notes ?? '').trim();
   if (notes.length > 2000) throw new Failure(`The notes are ${notes.length} characters; keep them under 2000.`);
