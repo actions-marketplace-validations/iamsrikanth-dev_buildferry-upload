@@ -1,5 +1,5 @@
 name: BuildFerry Upload
-description: Send an iOS build to testers' iPhones. New iPhones are registered with Apple and the build is re-signed for them.
+description: Send an iOS or Android build to testers. New iPhones are registered with Apple and the .ipa re-signed; an .apk shares the same link.
 author: BuildFerry
 branding:
   icon: send
@@ -9,7 +9,7 @@ inputs:
     description: BuildFerry API token, stored as a secret (create one at https://buildferry.app/ci)
     required: true
   ipa:
-    description: Path to the .ipa. Default, the newest .ipa in the workspace
+    description: Path to the .ipa, or an Android .apk. Default, the newest .ipa in the workspace
     required: false
     default: ''
   notes:
@@ -43,10 +43,10 @@ outputs:
     description: The app's page in BuildFerry
     value: ${{ steps.upload.outputs.app-url }}
   version:
-    description: The build's version (CFBundleShortVersionString)
+    description: The build's version (CFBundleShortVersionString, or versionName for an .apk)
     value: ${{ steps.upload.outputs.version }}
   build:
-    description: The build number (CFBundleVersion)
+    description: The build number (CFBundleVersion, or versionCode for an .apk)
     value: ${{ steps.upload.outputs.build }}
   testers:
     description: How many approved testers get this build

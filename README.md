@@ -1,6 +1,6 @@
 # BuildFerry Upload
 
-Send every iOS build from GitHub Actions to your testers' iPhones. [BuildFerry](https://buildferry.app) registers new iPhones with Apple and re-signs the build for them, so testers install from one link, and new builds reach that same link without anyone doing anything.
+Send every iOS and Android build from GitHub Actions to your testers. [BuildFerry](https://buildferry.app) registers new iPhones with Apple and re-signs the .ipa for them, and serves your .apk on the same link, so testers install from one link and new builds reach it without anyone doing anything.
 
 ## Usage
 
@@ -20,12 +20,25 @@ Send every iOS build from GitHub Actions to your testers' iPhones. [BuildFerry](
 
 With no `ipa:` input, the newest `.ipa` in the workspace is uploaded.
 
+### Android
+
+Pass the path of a signed `.apk`. It joins the app whose iOS bundle ID matches its package name, so iPhones and Android phones use the same link:
+
+```yaml
+- uses: iamsrikanth-dev/buildferry-upload@v1
+  with:
+    token: ${{ secrets.BUILDFERRY_TOKEN }}
+    ipa: app/build/outputs/apk/release/app-release.apk
+```
+
+Android App Bundles (`.aab`) can't be installed directly, so build an `.apk` (`./gradlew assembleRelease`).
+
 ## Inputs
 
 | Input | Default | |
 | --- | --- | --- |
 | `token` | (required) | BuildFerry API token |
-| `ipa` | newest `.ipa` | Path to the build |
+| `ipa` | newest `.ipa` | Path to the build: an `.ipa`, or an Android `.apk` |
 | `wait` | `true` | Wait for BuildFerry to check the build, so the step fails when it can't be shared |
 | `timeout` | `600` | Seconds to wait for the check |
 | `notes` | | What's new / what to test, shown to testers on the install page |
